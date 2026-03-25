@@ -1,5 +1,5 @@
 def main() -> None:
-    print("Hello from cmpt371-a3!")
+    print("client")
 
 
 if __name__ == "__main__":

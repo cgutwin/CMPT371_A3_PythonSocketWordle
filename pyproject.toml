@@ -1,29 +1,13 @@
 [project]
 name = "cmpt371-a3"
 version = "0.1.0"
-description = "Add your description here"
+description = "CMPT371 Assignment 3 "
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
-
-[dependency-groups]
-dev = [
-    "mypy>=1.19.1",
-    "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.15.6",
-]
-
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-v --tb=short"
 
 [tool.coverage.run]
 source = ["src"]
@@ -35,7 +19,14 @@ show_missing = true
 line-length = 80
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "W",  # pycodestyle warnings
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+]
 
 [tool.mypy]
 python_version = "3.14"
