@@ -20,7 +20,11 @@ class WaitingPlayer:
 
 
 def send(conn: socket.socket, message: str) -> None:
-    conn.sendall((message + "\n").encode())
+    try:
+        conn.sendall((message + "\n").encode())
+    # If the connection no longer exists, we just don't send.
+    except BrokenPipeError, OSError:
+        pass
 
 
 def parse_message(line: str) -> tuple[str, list[str]] | None:
@@ -73,6 +77,8 @@ def handle_command_JOIN(conn: socket.socket, args: list[str]):
 
 
 def handle_client(conn: socket.socket, addr: tuple[str, int]) -> None:
+    global waiting_player
+
     with conn:
         print(f"Connected from {addr}")
 
@@ -83,18 +89,33 @@ def handle_client(conn: socket.socket, addr: tuple[str, int]) -> None:
         # https://docs.python.org/3/library/socket.html#socket.socket.makefile
         # ...compared to...
         # https://docs.python.org/3/library/socket.html#socket.socket.recv
-        reader = conn.makefile("r")
+        try:
+            reader = conn.makefile("r")
 
-        for line in reader:
-            msg = parse_message(line)
+            for line in reader:
+                msg = parse_message(line)
 
-            if msg is None:
-                continue
+                if msg is None:
+                    continue
 
-            command, args = msg
-            if command == "JOIN":
-                handle_command_JOIN(conn, args)
-                break
+                command, args = msg
+                if command == "JOIN":
+                    handle_command_JOIN(conn, args)
+                    break
+        # The client can disconnect mid-reading or handling, and can maybe
+        # leave a client waiting when they've left.
+        except (ConnectionResetError, BrokenPipeError, OSError) as e:
+            print(f"Connection error when handling {addr}: {e}")
+        finally:
+            # Always check if there's a waiting player, and if it's the one
+            # which disconnected, we should remove them so we're not keeping
+            # the waiting spot blocked.
+            with lobby_waiting_lock:
+                if waiting_player is not None and waiting_player.conn is conn:
+                    print(
+                        f"Waiting player '{waiting_player.username}' disconnected."  # noqa: E501
+                    )
+                    waiting_player = None
 
 
 def main() -> None:
