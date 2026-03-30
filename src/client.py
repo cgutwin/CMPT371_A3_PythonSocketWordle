@@ -3,6 +3,16 @@ import socket
 HOST = '127.0.0.1' 
 PORT = 3000
 
+def client_guess(client):
+    while True:
+        client_input = input("Please enter a 5 letter word: ")
+        if len(client_input) != 5:
+            print("Error: Word must be exactly 5 letters ")
+        elif (not client_input.isalpha()):
+            print("Error: Word must only contain letters")
+        else:
+            break
+    client.sendall(f"GUESS {client_input}\n".encode("utf-8"))
 
 def start_client():
 
@@ -31,6 +41,16 @@ def start_client():
 
             if command == "GAME_START":
                 print(f"Game started! Your opponent is {args[0]}")
+                
+                # TODO: Have function to print gameboard
+
+                # Function to receive input from user first argument should be command 
+                client_guess(client)
+            
+            if command == "INVALID_GUESS":
+                print(f"Invalid Guess {args[0]}")
+                # Asks client to send another guess due to invalid input
+                client_guess(client)
 
     except ConnectionRefusedError:
         # Server is not running or unreachable
