@@ -1,9 +1,14 @@
 import signal
 import socket
+import sys
 import threading
 from dataclasses import dataclass
 from io import TextIOWrapper
+from pathlib import Path
 from typing import cast
+
+# TEMP fix to solve Zed debugger not finding module on Linux
+sys.path.insert(0, str(Path(__file__).parent))
 
 from protocol_commands import Command, InvalidGuessReason
 
@@ -40,9 +45,9 @@ class GameSession:
 
         try:
             for a, b in zip(self._word, guess_word, strict=True):
-                if a in word_letters:
+                if b in word_letters:
                     response += "G" if a == b else "Y"
-                    word_letters.remove(a)
+                    word_letters.remove(b)
                 else:
                     response += "X"
 
@@ -51,6 +56,15 @@ class GameSession:
             return
 
         return response
+
+    def get_player_by_num(self, num: int) -> Player:
+        return self._players[num]
+
+    def increment_player_guess_count(self, player: Player) -> None:
+        self._guess_counts[player.username] += 1
+
+    def get_player_guess_count(self, player: Player) -> int:
+        return self._guess_counts[player.username]
 
 
 class GameLobby:
@@ -156,15 +170,25 @@ def handle_client(conn: socket.socket, addr: tuple[str, int]) -> None:
                     send(partner.conn, f"GAME_START {player.username}")
                     send(player.conn, f"GAME_START {partner.username}")
             elif command == Command.GUESS:
-                assert game
+                if not player.game_session:
+                    return None
 
-                res = game.handle_guess(args[0])
+                print(f"guessing for player {player.username}: {args[0]}")
+                res = player.game_session.handle_guess(args[0])
+
                 if res is None:
                     send(
                         player.conn,
                         message=f"{Command.INVALID_GUESS} {InvalidGuessReason.WRONG_LENGTH}",  # noqa: E501
                     )
+
+                player.game_session.increment_player_guess_count(player)
+
                 send(player.conn, f"{Command.GUESS_RESULT} {res}")
+                send(
+                    player.game_session.get_player_by_num(1).conn,
+                    f"{Command.OPPONENT_GUESS_NUM} {player.game_session.get_player_guess_count(player)}",
+                )
 
     # The client can disconnect mid-reading or handling, and can maybe
     # leave a client waiting when they've left.

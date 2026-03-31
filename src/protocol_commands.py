@@ -10,6 +10,7 @@ class Command(StrEnum):
     GAME_START = "GAME_START"
     GUESS_RESULT = "GUESS_RESULT"
     INVALID_GUESS = "INVALID_GUESS"
+    OPPONENT_GUESS_NUM = "OPPONENT_GUESS_NUM"
 
 
 class InvalidGuessReason(StrEnum):
