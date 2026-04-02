@@ -19,6 +19,7 @@ source .venv/bin/activate.fish      # fish (Mac/Linux)
 Install dependencies:
 ```sh
 pip install -r requirements-dev.txt
+pip install colorama
 ```
 
 ## Running
