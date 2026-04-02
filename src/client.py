@@ -1,16 +1,71 @@
 import socket
+import colorama
+from colorama import Back, Style, init
+
+colorama.init(autoreset=True)
 
 HOST = '127.0.0.1' 
 PORT = 3000
 
+NUMBER_OF_GUESSES = 6
+GUESS_LENGTH = 5
+guess_count = 0
+guesses = ["_" * GUESS_LENGTH] * NUMBER_OF_GUESSES
+
+# Array that maps if the letters of the guess are in the word,
+# in the wrong order, or not in the word at all.
+feedback = ["_" * GUESS_LENGTH] * NUMBER_OF_GUESSES
+
+GREEN  = Back.GREEN
+YELLOW = Back.YELLOW
+GREY   = Back.LIGHTBLACK_EX
+
+# Function to colourize guess characters depending on if the guess matches the wordle
+# G = correct letter, correct position  (green)
+# Y = correct letter, wrong position    (yellow)
+# X = letter not in word                (grey)
+
+# e.g. LIGHT against PILOT → X X G X X
+# https://www.youtube.com/watch?v=P3AdKGHmtto
+def colourize_guess(guess, feedback):
+    result = ""
+    # Iterate through each character of the word and assign a corresponding colour
+    for i in range(GUESS_LENGTH):
+        letter = guess[i]
+        code = feedback[i]
+
+        if code == "G":
+            result += Style.BRIGHT + GREEN + letter
+        elif code == "Y":
+            result += Style.BRIGHT + YELLOW + letter
+        else:
+            result += Style.BRIGHT + GREY + letter
+    return result
+    
+
+def print_board():
+    print(f"Guess number: {guess_count}")
+    for i in range(NUMBER_OF_GUESSES):
+        if feedback[i] == "_____":
+            # Prints an empty row if there has not been a guess yet 
+            print(f"{guesses[i]}")
+        else:
+            # colourize each guess with its feedback
+            print(f"{colourize_guess(guesses[i], feedback[i])}")
+    print("\n")
+
 def client_guess(client):
+    global guess_count
     while True:
-        client_input = input("Please enter a 5 letter word: ")
+        client_input = input("Please enter a 5 letter word: ").strip().upper()
         if len(client_input) != 5:
             print("Error: Word must be exactly 5 letters ")
         elif (not client_input.isalpha()):
             print("Error: Word must only contain letters")
         else:
+            # Stores current guess in guesses array and increments guess_count 
+            guesses[guess_count] = client_input
+            guess_count += 1
             break
     client.sendall(f"GUESS {client_input}\n".encode("utf-8"))
 
@@ -41,15 +96,26 @@ def start_client():
 
             if command == "GAME_START":
                 print(f"Game started! Your opponent is {args[0]}")
-                
-                # TODO: Have function to print gameboard
+                print_board()
 
                 # Function to receive input from user first argument should be command 
                 client_guess(client)
             
-            if command == "INVALID_GUESS":
+            elif command == "INVALID_GUESS":
+                global guess_count
                 print(f"Invalid Guess {args[0]}")
+
+                # if a invalid guess was made it will reset the last guess and decrement guess_count
+                guesses[guess_count - 1] = "_____"
+                guess_count -= 1
+
                 # Asks client to send another guess due to invalid input
+                client_guess(client)
+
+            elif command == "GUESS_RESULT":
+                # Stores the guess_result data passed from the server in feedback array
+                feedback[guess_count - 1] = args[0]
+                print_board()
                 client_guess(client)
 
     except ConnectionRefusedError:
@@ -64,12 +130,18 @@ def start_client():
         client.close()
         
 
-
-
 def main() -> None:
     print("client")
 
+# Temp function
+def test_print_board():
+    global guesses, feedback
+    guesses = ["CRANE", "PLANT", "GREAT","WRONG","_____","_____"]
+    feedback = ["GYXGX", "XXYXX", "GGGGG", "XXXXX", "_____", "_____"]
+    print("Testing...")
+    print_board()
 
 if __name__ == "__main__":
-    start_client()
-    #main()
+    test_print_board()
+    # start_client()
+    # main()
