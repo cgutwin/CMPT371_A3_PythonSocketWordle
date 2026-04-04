@@ -5,8 +5,9 @@ import threading
 from pathlib import Path
 from typing import cast
 
-from server.game_session import GameSession
-from server.player import Player
+import wordledict as wordledict
+from game_session import GameSession
+from player import Player
 
 # TEMP fix to solve Zed debugger not finding module on Linux
 sys.path.insert(0, str(Path(__file__).parent))
@@ -78,7 +79,9 @@ def parse_message(line: str) -> tuple[Command, list[str]] | None:
 
 
 def handle_command_GUESS(player: Player, args: list[str]) -> None:
-    if args[0].lower() not in ["a"]:
+    if args[0].lower() not in list(
+        set(wordledict.allowed_guesses) | set(wordledict.possible_answers)
+    ):
         send(
             player.conn,
             f"{Command.INVALID_GUESS} {InvalidGuessReason.NOT_A_WORD}",
@@ -94,7 +97,7 @@ def handle_command_GUESS(player: Player, args: list[str]) -> None:
         return
 
     opponent = session.get_player_opponent(player)
-    guess_result = session.handle_guess(player, args[0])
+    guess_result = session.handle_guess(player, args[0].lower())
 
     if guess_result is None:
         send(

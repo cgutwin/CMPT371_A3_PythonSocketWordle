@@ -2,7 +2,7 @@ import threading
 import time
 from dataclasses import dataclass
 
-from server.player import Player
+from player import Player
 
 
 @dataclass
