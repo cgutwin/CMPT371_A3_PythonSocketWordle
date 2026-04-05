@@ -122,7 +122,7 @@ def handle_command_GUESS(player: Player, args: list[str]) -> None:
         )
 
     if (
-        session.state[opponent.username].guess_count >= MAX_GUESSES
+        session.state[player.username].guess_count >= MAX_GUESSES
         or guess_feedback == "GGGGG"
     ):
         # Check if opponent is also done
