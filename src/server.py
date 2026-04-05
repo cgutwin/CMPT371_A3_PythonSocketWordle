@@ -130,10 +130,13 @@ def handle_command_GUESS(player: Player, args: list[str]) -> None:
         opp_solved = session.state[opponent.username].solve_time is not None
         if opp_solved or opp_count >= MAX_GUESSES:
             if session.try_end():
-                for p in (player, opponent):
+                for p, opp in (
+                    (player, opponent),
+                    (opponent, player),
+                ):
                     send(
                         p.conn,
-                        f"{Command.GAME_OVER} {session.get_player_result(player)} {session.state[player.username].solve_time} {session.state[opponent.username].solve_time}",  # noqa: E501
+                        f"{Command.GAME_OVER} {session.get_player_result(p)} {session.state[p.username].solve_time} {session.state[opp.username].solve_time}",  # noqa: E501
                     )
 
 
