@@ -2,6 +2,7 @@ import socket
 
 import colorama
 from colorama import Back, Style, init
+from protocol_commands import Command
 
 colorama.init(autoreset=True)
 
@@ -61,7 +62,7 @@ def client_guess(client):
     global guess_count
     while True:
         client_input = input("Please enter a 5 letter word: ").strip().upper()
-        if len(client_input) != 5:
+        if len(client_input) != GUESS_LENGTH:
             print("Error: Word must be exactly 5 letters ")
         elif not client_input.isalpha():
             print("Error: Word must only contain letters")
@@ -70,7 +71,7 @@ def client_guess(client):
             guesses[guess_count] = client_input
             guess_count += 1
             break
-    client.sendall(f"GUESS {client_input}\n".encode("utf-8"))
+    client.sendall(f"{Command.GUESS} {client_input}\n".encode("utf-8"))
 
 
 def start_client():
@@ -84,7 +85,7 @@ def start_client():
     try:
         client.connect((HOST, PORT))
 
-        client.sendall(f"JOIN {player_name}\n".encode("utf-8"))
+        client.sendall(f"{Command.JOIN} {player_name}\n".encode("utf-8"))
         print(f"{player_name} connected. Waiting for opponent")
 
         reader = client.makefile("r")
@@ -100,14 +101,14 @@ def start_client():
             # If server sends more than 1 argument, succeeding arguments are stored in a list
             args = parts[1:]
 
-            if command == "GAME_START":
+            if command == Command.GAME_START:
                 print(f"Game started! Your opponent is {args[0]}")
                 print_board()
 
                 # Function to receive input from user first argument should be command
                 client_guess(client)
 
-            elif command == "INVALID_GUESS":
+            elif command == Command.INVALID_GUESS:
                 global guess_count
                 print(f"Invalid Guess {args[0]}")
 
@@ -118,7 +119,7 @@ def start_client():
                 # Asks client to send another guess due to invalid input
                 client_guess(client)
 
-            elif command == "GUESS_RESULT":
+            elif command == Command.GUESS_RESULT:
                 # Stores the guess_result data passed from the server in feedback array
                 feedback[guess_count - 1] = args[0]
                 print_board()
@@ -134,7 +135,7 @@ def start_client():
             # elif command == "OPPONENT_SOLVED":
             #     print("Opponent has solved the puzzle!")
 
-            elif command == "GAME_OVER":
+            elif command == Command.GAME_OVER:
                 result = args[0]
                 player_time = args[1]
                 opponent_time = args[2]
