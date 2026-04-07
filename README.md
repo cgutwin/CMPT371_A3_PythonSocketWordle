@@ -54,13 +54,12 @@ Below is a step-by-step guide to run the project. You will need:
 
 ### 1. Clone the Repository
 ```sh
-git clone https://github.com/cgutwin/cmpt371-project.git dir
-cd dir
+git clone https://github.com/cgutwin/cmpt371-project.git
 ```
 
 ### 2. Create a Virtual Python Environment
 ```sh
-python -m venv .venv
+python -m venv .venv # or python3 -m venv .venv
 ```
 
 ### 3. Activate the Virtual Environment:
@@ -77,7 +76,7 @@ source .venv/bin/activate.fish      # fish (Mac/Linux)
 
 ### 4. Install Dependencies
 ```sh
-pip install -r requirements.txt
+pip install -r requirements.txt # or pip3 install -r requirements.txt
 ```
 
 ## Step-by-Step Run Guide
@@ -87,7 +86,7 @@ pip install -r requirements.txt
 Open a terminal session in the project folder. The server will bind to `127.0.0.1` on port `3000`.
 
 ```sh
-python src/server.py
+python src/server.py # or python3 src/server.py
 ```
 
 It will output to the terminal `Listening on port 3000`.
@@ -97,7 +96,7 @@ It will output to the terminal `Listening on port 3000`.
 In a new terminal window/session, run the client script. Enter your username, and you'll be placed in the waiting lobby until another player joins to make a pair.
 
 ```sh
-python src/client.py
+python src/client.py # or python3 src/client.py
 ```
 
 ### 3. Connect Player Two
@@ -105,7 +104,7 @@ python src/client.py
 In another new terminal session, run the client script again. Enter your username and you will be paired with Player One. The match begins immediately!
 
 ```sh
-python src/client.py
+python src/client.py # or python3 src/client.py
 ```
 
 ### 4. Gameplay
