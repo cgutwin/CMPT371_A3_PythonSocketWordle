@@ -47,9 +47,103 @@ Listed below are Limitations from our project and edge cases that solutions have
 
 ## Prerequisites (Fresh Environment)
 
+Below is a step-by-step guide to run the project. You will need:
+
+- **Python 3.14** or greater (tested working on versions 3.14.3, 3.13.12, 3.12.13, 3.11.15).
+- External package `colorama`.
+
+### 1. Clone the Repository
+```sh
+git clone https://github.com/cgutwin/cmpt371-project.git dir
+cd dir
+```
+
+### 2. Create a Virtual Python Environment
+```sh
+python -m venv .venv
+```
+
+### 3. Activate the Virtual Environment:
+
+Depending on your terminal shell and operating system, pick the appropriate command to source the environment.
+
+```sh
+source .venv/Scripts/activate       # bash/zsh (Windows)
+source .venv/bin/activate           # bash/zsh (Mac/Linux)
+source .venv/Scripts/activate.fish  # fish (Windows)
+source .venv/bin/activate.fish      # fish (Mac/Linux)
+.\.venv\Scripts\Activate.ps1        # PowerShell (Windows)
+```
+
+### 4. Install Dependencies
+```sh
+pip install -r requirements.txt
+```
+
 ## Step-by-Step Run Guide
 
+### 1. Start the Server
+
+Open a terminal session in the project folder. The server will bind to `127.0.0.1` on port `3000`.
+
+```sh
+python src/server.py
+```
+
+It will output to the terminal `Listening on port 3000`.
+
+### 2. Connect Player One
+
+In a new terminal window/session, run the client script. Enter your username, and you'll be placed in the waiting lobby until another player joins to make a pair.
+
+```sh
+python src/client.py
+```
+
+### 3. Connect Player Two
+
+In another new terminal session, run the client script again. Enter your username and you will be paired with Player One. The match begins immediately!
+
+```sh
+python src/client.py
+```
+
+### 4. Gameplay
+- Each player will be prompted to enter a 5 letter word to guess.
+  - Players can guess simultaneously.
+- Submit the guess with Enter.
+  - If the guess isn't a guessable word, or is too short, you will be informed and told to make another guess.
+- The server validates the guess based on a randomly chosen word, and tells the clients how close their guess is.
+- When one player correctly guesses the word, they will wait for the other to either guess, or run out of guesses, before revealing the winner and time.
+
+
 ## Technical Protocol Details
+
+The custom application-layer protocol sends simple command-based messages for client-server communication over TCP.
+
+### Message Format
+Sending messages is done through the following format:
+```
+COMMAND message
+```
+Valid commands are outlined in the `src/protocol_commands.py` file.
+
+### Handshake Phase
+- Clients send `JOIN <username>` to join a game lobby
+- The server will send back:
+  - `WAITING` if no other player is in their lobby.
+  - `GAME_START` to each client if another player is in the lobby.
+
+### Gameplay Phase
+- Clients send `GUESS <word>` to the server
+- The server will send back:
+  - `GUESS_RESULT GGXYX` representing the colour encoding of the guess, compared to the random word.
+  - `INVALID_GUESS` with a reason:
+    - `NOT_A_WORD` if the guess isn't in the list of guessable words.
+    - `WRONG_LENGTH` if the guess submitted is not the correct word length.
+- The server sends `GAME_OVER` when a both players guess the correct word, or one/both run out of guesses
+  - Sent from the receiving client's perspective.
+  - `GAME_OVER <win|loss|draw> <player time or inf> <player time or inf>`
 
 ## Academic Integrity & References
 
@@ -65,113 +159,3 @@ Listed below are Limitations from our project and edge cases that solutions have
   - [Print Colorful Text in Python](https://www.youtube.com/watch?v=P3AdKGHmtto)
   - [Stop pyzmq receiver by KeyboardInterrupt](https://stackoverflow.com/questions/17174001/stop-pyzmq-receiver-by-keyboardinterrupt/26392777#26392777)
   - [socket — Low-level networking interface](https://docs.python.org/3/library/socket.html#socket.socket.makefile)
-
-# All stuff below merge with appropiate heading above
-
-## Installation Guide
-
-This project used Python 3.14.
-
-Clone the repository to a place of your choosing:
-
-```sh
-git clone https://github.com/cgutwin/cmpt371-project.git dir
-cd dir
-```
-
-Create a virtual environment and install dependencies:
-
-```sh
-python -m venv .venv
-```
-
-Activate the virtual environment depending on your terminal and operating system:
-
-```sh
-source .venv/Scripts/activate       # bash/zsh (Windows)
-source .venv/bin/activate           # bash/zsh (Mac/Linux)
-source .venv/Scripts/activate.fish  # fish (Windows)
-source .venv/bin/activate.fish      # fish (Mac/Linux)
-.\.venv\Scripts\Activate.ps1        # PowerShell (Windows)
-```
-
-Install dependencies:
-
-```sh
-pip install -r requirements.txt
-```
-
-## Running
-
-### Start the Server
-
-Open a terminal session in the project folder. The server will bind to `127.0.0.1` on port `3000`.
-
-```sh
-python src/server.py
-```
-
-### Connect Player One
-
-In a new terminal window/session, run the client script. Enter your username, and you'll be placed in the waiting lobby until another player joins to make a pair.
-
-```sh
-python src/client.py
-```
-
-### Connect Player Two
-
-In another new terminal session, run the client script again. Enter your username and you will be paired with Player One. The match, and timer, begins immediately!
-
-```sh
-python src/client.py
-```
-
-### Gameplay
-
-- The server will randomly choose a word to guess.
-- You will be prompted to enter a guess word.
-- Each player can make guesses simultaneously.
-- If the guess isn't a guessable word, or is too short, you will be informed and told to make another guess.
-- The server will validate your guess based on the randomly chosen word, and return back a colour encoding for your guess.
-- When one player guesses the word, they will wait for the other to either guess, or run out of guesses, before revealing the winner and time.
-
-## Technical Protocol Details
-
-- **Message Format:** `COMMAND message` (for example: `GUESS crane` may return `GUESS_RESULT GGXYX`)
-- **Joining a Game:** `JOIN username` will join the game lobby. If another player hasn't joined, the server sends back `WAITING`. When another player joins, the server manages the game session and sends back `GAME_START` to each client in the game.
-- **Gameplay:** Clients are responsible for submitting words with `GUESS <word>`, and the server is responsbible for checking if the guess matches the chosen word, sending back the colour encoding `GUESS_RESULT GGXYX`. When a player solves and the other runs out of guesses, or both run out of guesses, `GAME_OVER` is sent with results of the game to each client.
-
-## References
-
-- Socket boilerplate was taken from the Python documentation on sockets, available at https://docs.python.org/3/library/socket.html#example.
-
-## Development
-
-Create a virtual environment with `python -m venv .venv` as above, activate, and run `pip install -r requirements-dev.txt -r requirements.txt`.
-
-### Available Tools
-
-Run tests:
-
-```sh
-python -m pytest
-```
-
-Run linter:
-
-```sh
-python -m ruff check src tests
-```
-
-Run type checker:
-
-```sh
-python -m mypy src
-```
-
-Format code:
-
-```sh
-python -m ruff format src tests
-```
