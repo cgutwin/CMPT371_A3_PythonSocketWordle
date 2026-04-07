@@ -28,7 +28,7 @@ def send(conn: socket.socket, message: str) -> None:
     try:
         conn.sendall((message + "\n").encode())
     # If the connection no longer exists, we just don't send.
-    except BrokenPipeError, OSError:
+    except (BrokenPipeError, OSError):  # fmt: skip
         pass
 
 
